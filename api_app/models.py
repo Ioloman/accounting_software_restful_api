@@ -5,6 +5,8 @@
 #   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
+from datetime import date
+
 from django.db import models
 
 
@@ -82,8 +84,9 @@ class ProgramLine(models.Model):
 
 class Report(models.Model):
     report_pk = models.AutoField(primary_key=True)
-    doc_num = models.CharField(max_length=20)
-    date = models.DateField()
+    # doc_num = models.CharField(max_length=20)
+    doc_num = models.IntegerField()
+    date = models.DateField(default=date.today)
     workshop_sender_pk = models.ForeignKey('Workshop', models.DO_NOTHING, db_column='workshop_sender_pk', blank=True, null=True, related_name='report_sender')
     workshop_receiver_pk = models.ForeignKey('Workshop', models.DO_NOTHING, db_column='workshop_receiver_pk', blank=True, null=True, related_name='report_receiver')
 
@@ -95,7 +98,7 @@ class ReportLine(models.Model):
     report_line_pk = models.AutoField(primary_key=True)
     report_pk = models.ForeignKey(Report, models.DO_NOTHING, db_column='report_pk', blank=True, null=True)
     detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk', blank=True, null=True)
-    produced = models.IntegerField()
+    produced = models.IntegerField(default=0)
 
     class Meta:
         db_table = 'report_line'
@@ -121,7 +124,8 @@ class UsingLine(models.Model):
 
 class Vedomost(models.Model):
     vedomost_pk = models.AutoField(primary_key=True)
-    creation_date = models.DateField(blank=True, null=True)
+    doc_num = models.IntegerField()
+    creation_date = models.DateField(blank=True, null=True, default=date.today)
     workshop_pk = models.ForeignKey('Workshop', models.DO_NOTHING, db_column='workshop_pk', blank=True, null=True)
 
     class Meta:
@@ -131,7 +135,7 @@ class Vedomost(models.Model):
 class VedomostLine(models.Model):
     vedomost_line_pk = models.AutoField(primary_key=True)
     vedomost_pk = models.ForeignKey(Vedomost, models.DO_NOTHING, db_column='vedomost_pk', blank=True, null=True)
-    amount = models.IntegerField()
+    amount = models.IntegerField(default=0)
     detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk', blank=True, null=True)
 
     class Meta:
