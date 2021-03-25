@@ -9,7 +9,7 @@ from django.db import models
 
 
 class Detail(models.Model):
-    detail_pk = models.IntegerField(primary_key=True)
+    detail_pk = models.AutoField(primary_key=True)
     detail_name = models.CharField(max_length=100)
     cipher_detail = models.CharField(max_length=20)
 
@@ -18,7 +18,7 @@ class Detail(models.Model):
 
 
 class InterWorkshopRoutes(models.Model):
-    routes_pk = models.IntegerField(primary_key=True)
+    routes_pk = models.AutoField(primary_key=True)
     detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk', blank=True, null=True)
 
     class Meta:
@@ -26,7 +26,7 @@ class InterWorkshopRoutes(models.Model):
 
 
 class LineOfRoute(models.Model):
-    string_route_pk = models.IntegerField(primary_key=True)
+    string_route_pk = models.AutoField(primary_key=True)
     workshop_sender_pk = models.ForeignKey('Workshop', models.DO_NOTHING, db_column='workshop_sender_pk', blank=True, null=True, related_name='line_sender')
     workshop_receiver_pk = models.ForeignKey('Workshop', models.DO_NOTHING, db_column='workshop_receiver_pk', blank=True, null=True, related_name='line_receiver')
     detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk', blank=True, null=True)
@@ -38,7 +38,7 @@ class LineOfRoute(models.Model):
 
 
 class ProductionProgramByMonth(models.Model):
-    production_program_pk = models.IntegerField(primary_key=True)
+    production_program_pk = models.AutoField(primary_key=True)
     start_date = models.DateField()
     end_date = models.DateField()
     creation_date = models.DateField()
@@ -50,7 +50,7 @@ class ProductionProgramByMonth(models.Model):
 
 
 class ProductionProgramForTheQuarterByMonth(models.Model):
-    production_program_quarter_pk = models.IntegerField(primary_key=True)
+    production_program_quarter_pk = models.AutoField(primary_key=True)
     quarter_number = models.IntegerField()
 
     class Meta:
@@ -58,7 +58,7 @@ class ProductionProgramForTheQuarterByMonth(models.Model):
 
 
 class ProductionProgramForTheQuarterByMonthLine(models.Model):
-    line_pk = models.IntegerField(primary_key=True)
+    line_pk = models.AutoField(primary_key=True)
     detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk')
     production_program_quarter_pk = models.ForeignKey(ProductionProgramForTheQuarterByMonth, models.DO_NOTHING, db_column='production_program_quarter_pk')
     amount = models.IntegerField(blank=True, null=True)
@@ -70,7 +70,7 @@ class ProductionProgramForTheQuarterByMonthLine(models.Model):
 
 
 class ProgramLine(models.Model):
-    program_line_pk = models.IntegerField(primary_key=True)
+    program_line_pk = models.AutoField(primary_key=True)
     amount = models.IntegerField()
     production_program_pk = models.ForeignKey(ProductionProgramByMonth, models.DO_NOTHING, db_column='production_program_pk')
     detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk')
@@ -81,7 +81,7 @@ class ProgramLine(models.Model):
 
 
 class Report(models.Model):
-    report_pk = models.IntegerField(primary_key=True)
+    report_pk = models.AutoField(primary_key=True)
     doc_num = models.CharField(max_length=20)
     date = models.DateField()
     workshop_sender_pk = models.ForeignKey('Workshop', models.DO_NOTHING, db_column='workshop_sender_pk', blank=True, null=True, related_name='report_sender')
@@ -92,7 +92,7 @@ class Report(models.Model):
 
 
 class ReportLine(models.Model):
-    report_line_pk = models.IntegerField(primary_key=True)
+    report_line_pk = models.AutoField(primary_key=True)
     report_pk = models.ForeignKey(Report, models.DO_NOTHING, db_column='report_pk', blank=True, null=True)
     detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk', blank=True, null=True)
     produced = models.IntegerField()
@@ -102,7 +102,7 @@ class ReportLine(models.Model):
 
 
 class UsingInstruction(models.Model):
-    using_pk = models.IntegerField(primary_key=True)
+    using_pk = models.AutoField(primary_key=True)
     detail_manufactured_pk = models.OneToOneField(Detail, models.DO_NOTHING, db_column='detail_manufactured_pk')
 
     class Meta:
@@ -110,7 +110,7 @@ class UsingInstruction(models.Model):
 
 
 class UsingLine(models.Model):
-    using_line_pk = models.IntegerField(primary_key=True)
+    using_line_pk = models.AutoField(primary_key=True)
     amount = models.IntegerField()
     detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk', blank=True, null=True)
     using_pk = models.ForeignKey(UsingInstruction, models.DO_NOTHING, db_column='using_pk', blank=True, null=True)
@@ -120,7 +120,7 @@ class UsingLine(models.Model):
 
 
 class Vedomost(models.Model):
-    vedomost_pk = models.IntegerField(primary_key=True)
+    vedomost_pk = models.AutoField(primary_key=True)
     creation_date = models.DateField(blank=True, null=True)
     workshop_pk = models.ForeignKey('Workshop', models.DO_NOTHING, db_column='workshop_pk', blank=True, null=True)
 
@@ -129,7 +129,7 @@ class Vedomost(models.Model):
 
 
 class VedomostLine(models.Model):
-    vedomost_line_pk = models.IntegerField(primary_key=True)
+    vedomost_line_pk = models.AutoField(primary_key=True)
     vedomost_pk = models.ForeignKey(Vedomost, models.DO_NOTHING, db_column='vedomost_pk', blank=True, null=True)
     amount = models.IntegerField()
     detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk', blank=True, null=True)
@@ -139,7 +139,7 @@ class VedomostLine(models.Model):
 
 
 class Workshop(models.Model):
-    workshop_pk = models.IntegerField(primary_key=True)
+    workshop_pk = models.AutoField(primary_key=True)
     workshop_name = models.CharField(max_length=100)
     cipher_workshop = models.CharField(max_length=20)
 
