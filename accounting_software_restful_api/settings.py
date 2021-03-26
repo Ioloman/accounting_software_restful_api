@@ -126,6 +126,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 try:
-    from . import production_settings
+    from .production_settings import *
 except ImportError:
     pass
