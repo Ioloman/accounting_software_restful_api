@@ -15,6 +15,9 @@ class Detail(models.Model):
     detail_name = models.CharField(max_length=100)
     cipher_detail = models.CharField(max_length=20)
 
+    def __str__(self):
+        return f'{self.detail_name} - {self.cipher_detail}'
+
     class Meta:
         db_table = 'detail'
 
@@ -87,8 +90,10 @@ class Report(models.Model):
     # doc_num = models.CharField(max_length=20)
     doc_num = models.IntegerField()
     date = models.DateField(default=date.today)
-    workshop_sender_pk = models.ForeignKey('Workshop', models.DO_NOTHING, db_column='workshop_sender_pk', blank=True, null=True, related_name='report_sender')
-    workshop_receiver_pk = models.ForeignKey('Workshop', models.DO_NOTHING, db_column='workshop_receiver_pk', blank=True, null=True, related_name='report_receiver')
+    workshop_sender_pk = models.ForeignKey('Workshop', models.DO_NOTHING, db_column='workshop_sender_pk', blank=True, null=True)
+
+    def __str__(self):
+        return f'#{self.doc_num} от: {self.date}'
 
     class Meta:
         db_table = 'report'
@@ -96,9 +101,13 @@ class Report(models.Model):
 
 class ReportLine(models.Model):
     report_line_pk = models.AutoField(primary_key=True)
-    report_pk = models.ForeignKey(Report, models.DO_NOTHING, db_column='report_pk', blank=True, null=True)
+    report_pk = models.ForeignKey(Report, models.CASCADE, db_column='report_pk', blank=True, null=True)
     detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk', blank=True, null=True)
+    workshop_receiver_pk = models.ForeignKey('Workshop', models.DO_NOTHING, db_column='workshop_receiver_pk', blank=True, null=True)
     produced = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f'Отчет #{self.report_pk.doc_num}, Деталь {self.detail_pk.detail_name}'
 
     class Meta:
         db_table = 'report_line'
@@ -128,13 +137,16 @@ class Vedomost(models.Model):
     creation_date = models.DateField(blank=True, null=True, default=date.today)
     workshop_pk = models.ForeignKey('Workshop', models.DO_NOTHING, db_column='workshop_pk', blank=True, null=True)
 
+    def __str__(self):
+        return f'#{self.doc_num} от: {self.creation_date}'
+
     class Meta:
         db_table = 'vedomost'
 
 
 class VedomostLine(models.Model):
     vedomost_line_pk = models.AutoField(primary_key=True)
-    vedomost_pk = models.ForeignKey(Vedomost, models.DO_NOTHING, db_column='vedomost_pk', blank=True, null=True)
+    vedomost_pk = models.ForeignKey(Vedomost, models.CASCADE, db_column='vedomost_pk', blank=True, null=True)
     amount = models.IntegerField(default=0)
     detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk', blank=True, null=True)
 
@@ -146,6 +158,9 @@ class Workshop(models.Model):
     workshop_pk = models.AutoField(primary_key=True)
     workshop_name = models.CharField(max_length=100)
     cipher_workshop = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f'{self.workshop_name} - {self.cipher_workshop}'
 
     class Meta:
         db_table = 'workshop'
