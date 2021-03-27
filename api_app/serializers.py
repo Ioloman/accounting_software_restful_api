@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Detail, Report, ReportLine
+from .models import Detail, Report, ReportLine, VedomostLine, Vedomost
 
 
 class DetailSerializer(serializers.ModelSerializer):
@@ -31,3 +31,26 @@ class ReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Report
         fields = ['url', 'report_pk', 'doc_num', 'date', 'workshop_sender_pk', 'report_lines']
+
+
+class VedomostLineSerializer(serializers.ModelSerializer):
+    detail = serializers.SerializerMethodField()
+    url = serializers.HyperlinkedIdentityField(view_name='api:vedomost-line-detail')
+
+    def get_detail(self, obj):
+        data = DetailSerializer(instance=obj.detail_pk, context={'request': self.context['request']}).data
+        data.pop('detail_pk')
+        return data
+
+    class Meta:
+        model = VedomostLine
+        fields = ['url', 'vedomost_line_pk', 'vedomost_pk', 'detail_pk', 'amount', 'detail']
+
+
+class VedomostSerializer(serializers.ModelSerializer):
+    vedomost_lines = VedomostLineSerializer(read_only=True, many=True, allow_null=True, source='vedomostline_set', required=False)
+    url = serializers.HyperlinkedIdentityField(view_name='api:vedomost-detail')
+
+    class Meta:
+        model = Vedomost
+        fields = ['url', 'vedomost_pk', 'doc_num', 'creation_date', 'workshop_pk', 'vedomost_lines']

@@ -16,7 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from api_app import views
+
 urlpatterns = [
+    path('', views.redirect_view),
     path('admin/', admin.site.urls),
     path('api/', include('api_app.urls', namespace='api')),
     # path('api-auth/', include('rest_framework.urls')),

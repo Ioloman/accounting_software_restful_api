@@ -11,4 +11,9 @@ urlpatterns = [
     path('reports/<int:pk>/', views.ReportDetail.as_view(), name='report-detail'),
     path('report-lines/', views.ReportLineList.as_view(), name='report-line-list'),
     path('report-lines/<int:pk>/', views.ReportLineDetail.as_view(), name='report-line-detail'),
+
+    path('vedomosts/', views.VedomostList.as_view(), name='vedomost-list'),
+    path('vedomosts/<int:pk>/', views.VedomostDetail.as_view(), name='vedomost-detail'),
+    path('vedomost-lines/', views.VedomostLineList.as_view(), name='vedomost-line-list'),
+    path('vedomost-lines/<int:pk>/', views.VedomostLineDetail.as_view(), name='vedomost-line-detail'),
 ]
