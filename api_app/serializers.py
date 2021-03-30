@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Detail, Report, ReportLine, VedomostLine, Vedomost
+from .models import Detail, Report, ReportLine, VedomostLine, Vedomost, Workshop
 
 
 class DetailSerializer(serializers.ModelSerializer):
@@ -8,6 +8,14 @@ class DetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Detail
         fields = ['url', 'detail_pk', 'detail_name', 'cipher_detail']
+
+
+class WorkshopSerializer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name='api:workshop-detail')
+
+    class Meta:
+        model = Workshop
+        fields = ['url', 'workshop_pk', 'workshop_name', 'cipher_workshop']
 
 
 class ReportLineSerializer(serializers.ModelSerializer):

@@ -5,9 +5,9 @@ from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
-from api_app.models import Detail, Report, ReportLine, Vedomost, VedomostLine
+from api_app.models import Detail, Report, ReportLine, Vedomost, VedomostLine, Workshop
 from api_app.serializers import DetailSerializer, ReportSerializer, ReportLineSerializer, VedomostSerializer, \
-    VedomostLineSerializer
+    VedomostLineSerializer, WorkshopSerializer
 
 
 def redirect_view(request):
@@ -48,6 +48,7 @@ def api_root(request, format=None):
         'Ведомости': reverse('api:vedomost-list', request=request, format=format),
         'Строки ведомостей': reverse('api:vedomost-line-list', request=request, format=format),
         'Детали': reverse('api:detail-list', request=request, format=format),
+        'Цеха': reverse('api:workshop-list', request=request, format=format),
     })
 
 
@@ -68,6 +69,25 @@ class DetailDetail(generics.RetrieveAPIView):
     """
     queryset = Detail.objects.all()
     serializer_class = DetailSerializer
+
+
+class WorkshopList(generics.ListAPIView):
+    """
+    Read-Only. Список цехов. Создавать через админку.
+    Возможен поиск.
+    """
+    queryset = Workshop.objects.all()
+    serializer_class = WorkshopSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['workshop_name']
+
+
+class WorkshopDetail(generics.RetrieveAPIView):
+    """
+    Read-Only. Просмотр цехов. Создавать через админку.
+    """
+    queryset = Workshop.objects.all()
+    serializer_class = WorkshopSerializer
 
 
 class ReportList(generics.ListCreateAPIView):
