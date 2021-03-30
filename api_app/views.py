@@ -78,8 +78,9 @@ class WorkshopList(generics.ListAPIView):
     """
     queryset = Workshop.objects.all()
     serializer_class = WorkshopSerializer
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['workshop_name']
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    search_fields = ['workshop_name', 'cipher_workshop']
+    filterset_fields = ['workshop_name', 'cipher_workshop']
 
 
 class WorkshopDetail(generics.RetrieveAPIView):
