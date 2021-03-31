@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 from api_app import views
 
 app_name = 'api'
@@ -18,4 +18,6 @@ urlpatterns = [
     path('vedomosts/<int:pk>/', views.VedomostDetail.as_view(), name='vedomost-detail'),
     path('vedomost-lines/', views.VedomostLineList.as_view(), name='vedomost-line-list'),
     path('vedomost-lines/<int:pk>/', views.VedomostLineDetail.as_view(), name='vedomost-line-detail'),
+
+    path('leftovers/', views.Leftovers.as_view(), name='leftovers'),
 ]

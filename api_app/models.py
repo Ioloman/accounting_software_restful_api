@@ -142,6 +142,7 @@ class Vedomost(models.Model):
 
     class Meta:
         db_table = 'vedomost'
+        get_latest_by = 'creation_date'
 
 
 class VedomostLine(models.Model):
@@ -149,6 +150,9 @@ class VedomostLine(models.Model):
     vedomost_pk = models.ForeignKey(Vedomost, models.CASCADE, db_column='vedomost_pk', blank=True, null=True)
     amount = models.IntegerField(default=0)
     detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk', blank=True, null=True)
+
+    def __str__(self):
+        return f'#{self.vedomost_pk.doc_num} - {self.detail_pk.detail_name} x {self.amount}'
 
     class Meta:
         db_table = 'vedomost_line'

@@ -1,3 +1,6 @@
+import datetime
+
+from django.db.models import QuerySet
 from django.shortcuts import redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
@@ -5,7 +8,9 @@ from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
-from api_app.models import Detail, Report, ReportLine, Vedomost, VedomostLine, Workshop
+from rest_framework.views import APIView
+
+from api_app.models import Detail, Report, ReportLine, Vedomost, VedomostLine, Workshop, UsingInstruction
 from api_app.serializers import DetailSerializer, ReportSerializer, ReportLineSerializer, VedomostSerializer, \
     VedomostLineSerializer, WorkshopSerializer
 
@@ -49,6 +54,7 @@ def api_root(request, format=None):
         'Строки ведомостей': reverse('api:vedomost-line-list', request=request, format=format),
         'Детали': reverse('api:detail-list', request=request, format=format),
         'Цеха': reverse('api:workshop-list', request=request, format=format),
+        'Остатки': reverse('api:leftovers', request=request, format=format),
     })
 
 
@@ -175,6 +181,106 @@ class VedomostLineDetail(generics.RetrieveUpdateDestroyAPIView):
     """
     queryset = VedomostLine.objects.all()
     serializer_class = VedomostLineSerializer
+
+
+def split_details(details: list[dict], request):
+    details = details.copy()
+    details_to_add = []
+    details_to_remove = []
+    for detail in details:
+        try:
+            instruction = UsingInstruction.objects.get(detail_manufactured_pk__detail_pk=detail['detail_pk'])
+            for using_line in instruction.usingline_set.all():
+                data = DetailSerializer(instance=using_line.detail_pk, context={'request': request}).data
+                data['amount'] = using_line.amount * detail['amount']
+                details_to_add.append(data)
+            details_to_remove.append(detail)
+        except UsingInstruction.DoesNotExist:
+            pass
+    for detail in details_to_remove:
+        details.remove(detail)
+    details.extend(details_to_add)
+    return details
+
+
+class Leftovers(APIView):
+    """
+    Остатки. Необходимы параметры date и workshop_pk, например:
+    /api/leftovers/?date=2021-02-20&workshop_pk=2
+    """
+    def get(self, request, format=None):
+        if not request.GET.get('date') or not request.GET.get('workshop_pk'):
+            return Response({'error': 'Url params date and workshop_pk are required', 'leftovers': [], 'stuck': []})
+        date = datetime.date.fromisoformat(request.GET.get('date'))
+        workshop_pk = request.GET.get('workshop_pk')
+        # последняя ведомость инвентаризации
+        vedomost: Vedomost = Vedomost.objects.filter(
+            creation_date__lte=date,
+            workshop_pk=workshop_pk
+        ).latest()
+        # входные партии
+        income_lines: QuerySet[ReportLine] = ReportLine.objects.filter(
+            workshop_receiver_pk__workshop_pk=workshop_pk,
+            report_pk__date__lte=date,
+            report_pk__date__gte=vedomost.creation_date
+        )
+        # выходные партии
+        outcome_lines: QuerySet[ReportLine] = ReportLine.objects.filter(
+            report_pk__workshop_sender_pk__workshop_pk=workshop_pk,
+            report_pk__date__lte=date,
+            report_pk__date__gte=vedomost.creation_date
+        )
+        # словарь для расчета остатков
+        details = {}
+        # записываем данные инвентаризации
+        for vedomost_line in vedomost.vedomostline_set.all():
+            if vedomost_line.amount:
+                data = DetailSerializer(instance=vedomost_line.detail_pk, context={'request': request}).data
+                data['amount'] = vedomost_line.amount
+                details[vedomost_line.detail_pk.detail_pk] = data
+        # прибавляем входные партии
+        for line in income_lines:
+            if line.produced:
+                if line.detail_pk.detail_pk in details:
+                    details[line.detail_pk.detail_pk]['amount'] += line.produced
+                else:
+                    data = DetailSerializer(instance=line.detail_pk, context={'request': request}).data
+                    data['amount'] = line.produced
+                    details[line.detail_pk.detail_pk] = data
+        # преобразуем выходные партии в удобный формат
+        outcome_details = []
+        for line in outcome_lines:
+            if line.produced:
+                data = DetailSerializer(instance=line.detail_pk, context={'request': request}).data
+                data['amount'] = line.produced
+                outcome_details.append(data)
+        # вычитаем выходные
+        while outcome_details:
+            # отнимаем вышедшие детали
+            for detail in outcome_details:
+                if details.get(detail['detail_pk']):
+                    subtrahend = min(detail['amount'], details.get(detail['detail_pk'])['amount'])
+                    details.get(detail['detail_pk'])['amount'] -= subtrahend
+                    detail['amount'] -= subtrahend
+            # очищаем у которых количество на нуле
+            outcome_details = list(filter(lambda d: d['amount'] != 0, outcome_details))
+            for key in list(filter(lambda k: details[k]['amount'] == 0, details)):
+                del details[key]
+            # разбиваем
+            new_outcome_details = split_details(outcome_details, request)
+            if new_outcome_details == outcome_details:
+                break
+            else:
+                outcome_details = new_outcome_details
+        details = list(details.values())
+        return Response({
+            'leftovers': details,
+            'stuck': outcome_details,
+            'error': None
+        })
+
+
+
 
 
 
