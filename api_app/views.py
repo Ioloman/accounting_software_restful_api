@@ -183,31 +183,31 @@ class VedomostLineDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = VedomostLineSerializer
 
 
+def split_details(details, request):
+    details = details.copy()
+    details_to_add = []
+    details_to_remove = []
+    for detail in details:
+        try:
+            instruction = UsingInstruction.objects.get(detail_manufactured_pk__detail_pk=detail['detail_pk'])
+            for using_line in instruction.usingline_set.all():
+                data = DetailSerializer(instance=using_line.detail_pk, context={'request': request}).data
+                data['amount'] = using_line.amount * detail['amount']
+                details_to_add.append(data)
+            details_to_remove.append(detail)
+        except UsingInstruction.DoesNotExist:
+            pass
+    for detail in details_to_remove:
+        details.remove(detail)
+    details.extend(details_to_add)
+    return details
+
+
 class Leftovers(APIView):
     """
     Остатки. Необходимы параметры date и workshop_pk, например:
     /api/leftovers/?date=2021-02-20&workshop_pk=2
     """
-    @staticmethod
-    def split_details(details: list[dict], request):
-        details = details.copy()
-        details_to_add = []
-        details_to_remove = []
-        for detail in details:
-            try:
-                instruction = UsingInstruction.objects.get(detail_manufactured_pk__detail_pk=detail['detail_pk'])
-                for using_line in instruction.usingline_set.all():
-                    data = DetailSerializer(instance=using_line.detail_pk, context={'request': request}).data
-                    data['amount'] = using_line.amount * detail['amount']
-                    details_to_add.append(data)
-                details_to_remove.append(detail)
-            except UsingInstruction.DoesNotExist:
-                pass
-        for detail in details_to_remove:
-            details.remove(detail)
-        details.extend(details_to_add)
-        return details
-
     def get(self, request, format=None):
         if not request.GET.get('date') or not request.GET.get('workshop_pk'):
             return Response({'error': 'Url params date and workshop_pk are required', 'leftovers': [], 'stuck': []})
@@ -267,7 +267,7 @@ class Leftovers(APIView):
             for key in list(filter(lambda k: details[k]['amount'] == 0, details)):
                 del details[key]
             # разбиваем
-            new_outcome_details = Leftovers.split_details(outcome_details, request)
+            new_outcome_details = split_details(outcome_details, request)
             if new_outcome_details == outcome_details:
                 break
             else:
