@@ -1,4 +1,5 @@
 import datetime
+import math
 
 from django.db.models import QuerySet
 from django.shortcuts import redirect
@@ -10,7 +11,8 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
-from api_app.models import Detail, Report, ReportLine, Vedomost, VedomostLine, Workshop, UsingInstruction
+from api_app.models import Detail, Report, ReportLine, Vedomost, VedomostLine, Workshop, UsingInstruction, \
+    ProductionProgramByMonth
 from api_app.serializers import DetailSerializer, ReportSerializer, ReportLineSerializer, VedomostSerializer, \
     VedomostLineSerializer, WorkshopSerializer
 
@@ -55,6 +57,7 @@ def api_root(request, format=None):
         'Детали': reverse('api:detail-list', request=request, format=format),
         'Цеха': reverse('api:workshop-list', request=request, format=format),
         'Остатки': reverse('api:leftovers', request=request, format=format),
+        'Сводный учет': reverse('api:accounting', request=request, format=format),
     })
 
 
@@ -278,6 +281,83 @@ class Leftovers(APIView):
             'stuck': outcome_details,
             'error': None
         })
+
+
+class Accounting(APIView):
+    """
+    Сводный учет. Если deviation > 0, то это переработка.
+    Необходим параметр workshop_pk, start_date или end_date опциональные например:
+    /api/accounting/?start_date=2021-03-15&workshop_pk=2
+    /api/accounting/?workshop_pk=2
+    /api/accounting/?end_date=2021-02-22&workshop_pk=2
+    /api/accounting/?start_date=2021-01-15&workshop_pk=2&end_date=2021-02-22
+    """
+    def get(self, request, format=None):
+        if not request.GET.get('workshop_pk'):
+            return Response({
+                'error': 'Url param workshop_pk is required',
+                'accounting': []}
+            )
+
+        if request.GET.get('start_date'):
+            start_date = datetime.date.fromisoformat(request.GET.get('start_date'))
+        else:
+            start_date = datetime.date.min
+        if request.GET.get('end_date'):
+            end_date = datetime.date.fromisoformat(request.GET.get('end_date'))
+        else:
+            end_date = datetime.date.max
+        if (end_date - start_date).days + 1 <= 0:
+            return Response({
+                'error': 'Dates are invalid',
+                'accounting': []}
+            )
+        workshop_pk = request.GET.get('workshop_pk')
+
+        report_lines: QuerySet[ReportLine] = ReportLine.objects.filter(
+            report_pk__workshop_sender_pk=workshop_pk,
+            report_pk__date__lte=end_date, report_pk__date__gte=start_date
+        ).order_by('report_pk__date')
+        programs: QuerySet[ProductionProgramByMonth] = ProductionProgramByMonth.objects.filter(
+            workshop_pk=workshop_pk, start_date__lte=end_date, end_date__gte=start_date
+        ).order_by('start_date')
+
+        details = {}
+        for line in report_lines:
+            if line.produced:
+                if line.detail_pk.detail_pk in details:
+                    details[line.detail_pk.detail_pk]['actual_amount'] += line.produced
+                else:
+                    data = DetailSerializer(instance=line.detail_pk, context={'request': request}).data
+                    data['actual_amount'] = line.produced
+                    data['planned_amount'] = 0
+                    details[line.detail_pk.detail_pk] = data
+
+        for program in programs:
+            left_border = max(start_date, program.start_date)
+            right_border = min(end_date, program.end_date)
+            coefficient = ((right_border - left_border).days + 1) / ((program.end_date - program.start_date).days + 1)
+            for line in program.programline_set.all():
+                if line.amount:
+                    if line.detail_pk.detail_pk in details:
+                        details[line.detail_pk.detail_pk]['planned_amount'] += round(line.amount * coefficient)
+                    else:
+                        data = DetailSerializer(instance=line.detail_pk, context={'request': request}).data
+                        data['planned_amount'] = round(line.amount * coefficient)
+                        data['actual_amount'] = 0
+                        details[line.detail_pk.detail_pk] = data
+
+        details = list(details.values())
+        for detail in details:
+            detail['deviation'] = detail['actual_amount'] - detail['planned_amount']
+
+        return Response({
+            'error': None,
+            'accounting': details}
+        )
+
+
+
 
 
 

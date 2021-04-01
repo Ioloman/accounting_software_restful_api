@@ -20,4 +20,5 @@ urlpatterns = [
     path('vedomost-lines/<int:pk>/', views.VedomostLineDetail.as_view(), name='vedomost-line-detail'),
 
     path('leftovers/', views.Leftovers.as_view(), name='leftovers'),
+    path('accounting/', views.Accounting.as_view(), name='accounting'),
 ]
