@@ -1,7 +1,7 @@
 import datetime
 import math
 
-from django.db.models import QuerySet
+from django.db.models import QuerySet, When, Case, IntegerField
 from django.shortcuts import redirect
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
@@ -83,13 +83,23 @@ class DetailDetail(generics.RetrieveAPIView):
 class WorkshopList(generics.ListAPIView):
     """
     Read-Only. Список цехов. Создавать через админку.
-    Возможен поиск.
+    Возможен поиск, фильтрация по названию, шифру.
+    А также по списку первичных ключей, например:
+    /api/workshops/?workshop_pks=1,2,5,15
+    Но результаты неотсортированы!
     """
     queryset = Workshop.objects.all()
     serializer_class = WorkshopSerializer
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['workshop_name', 'cipher_workshop']
     filterset_fields = ['workshop_name', 'cipher_workshop']
+
+    def filter_queryset(self, queryset: QuerySet[Workshop]):
+        if self.request.query_params.get('workshop_pks'):
+            workshop_pks = self.request.query_params.get('workshop_pks').split(',')
+            return queryset.filter(workshop_pk__in=map(int, workshop_pks))
+        else:
+            return queryset
 
 
 class WorkshopDetail(generics.RetrieveAPIView):
