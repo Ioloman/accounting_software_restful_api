@@ -226,11 +226,14 @@ class Leftovers(APIView):
             return Response({'error': 'Url params date and workshop_pk are required', 'leftovers': [], 'stuck': []})
         date = datetime.date.fromisoformat(request.GET.get('date'))
         workshop_pk = request.GET.get('workshop_pk')
-        # последняя ведомость инвентаризации
-        vedomost: Vedomost = Vedomost.objects.filter(
-            creation_date__lte=date,
-            workshop_pk=workshop_pk
-        ).latest()
+        try:
+            # последняя ведомость инвентаризации
+            vedomost: Vedomost = Vedomost.objects.filter(
+                creation_date__lte=date,
+                workshop_pk=workshop_pk
+            ).latest()
+        except Vedomost.DoesNotExist:
+            return Response({'error': f'No vedomosts were found before {date}', 'leftovers': [], 'stuck': []})
         # входные партии
         income_lines: QuerySet[ReportLine] = ReportLine.objects.filter(
             workshop_receiver_pk__workshop_pk=workshop_pk,
