@@ -99,7 +99,7 @@ class WorkshopList(generics.ListAPIView):
             workshop_pks = self.request.query_params.get('workshop_pks').split(',')
             return queryset.filter(workshop_pk__in=map(int, workshop_pks))
         else:
-            return queryset
+            return super().filter_queryset(queryset)
 
 
 class WorkshopDetail(generics.RetrieveAPIView):
