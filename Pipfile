@@ -9,6 +9,7 @@ verify_ssl = true
 django = "*"
 djangorestframework = "*"
 mysqlclient = "*"
+django-filter = "*"
 
 [requires]
 python_version = "3.9"
