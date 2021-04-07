@@ -50,6 +50,12 @@ class ReportSerializer(serializers.ModelSerializer):
         to_change = []
         to_create = []
 
+        for new_line in new_lines:
+            if new_line['report_line_pk'] < 0:
+                to_create.append(new_line)
+        for create in to_create:
+            new_lines.remove(create)
+
         for old_line in old_lines:
             for new_line in new_lines:
                 if old_line['report_line_pk'] == new_line['report_line_pk']:
@@ -58,15 +64,6 @@ class ReportSerializer(serializers.ModelSerializer):
                 to_delete.append(old_line)
         for delete in to_delete:
             old_lines.remove(delete)
-
-        for new_line in new_lines:
-            for old_line in old_lines:
-                if old_line['report_line_pk'] == new_line['report_line_pk']:
-                    break
-            else:
-                to_create.append(new_line)
-        for create in to_create:
-            new_lines.remove(create)
 
         for new_line in new_lines:
             for old_line in old_lines:
@@ -129,6 +126,12 @@ class VedomostSerializer(serializers.ModelSerializer):
         to_change = []
         to_create = []
 
+        for new_line in new_lines:
+            if new_line['vedomost_line_pk'] < 0:
+                to_create.append(new_line)
+        for create in to_create:
+            new_lines.remove(create)
+
         for old_line in old_lines:
             for new_line in new_lines:
                 if old_line['vedomost_line_pk'] == new_line['vedomost_line_pk']:
@@ -137,15 +140,6 @@ class VedomostSerializer(serializers.ModelSerializer):
                 to_delete.append(old_line)
         for delete in to_delete:
             old_lines.remove(delete)
-
-        for new_line in new_lines:
-            for old_line in old_lines:
-                if old_line['vedomost_line_pk'] == new_line['vedomost_line_pk']:
-                    break
-            else:
-                to_create.append(new_line)
-        for create in to_create:
-            new_lines.remove(create)
 
         for new_line in new_lines:
             for old_line in old_lines:
