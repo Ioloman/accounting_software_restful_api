@@ -378,7 +378,7 @@ class CreateVedomost(APIView):
         teen_amount = request.GET.get('teen_amount')
         adult_amount = request.GET.get('adult_amount')
         workshop_pk = request.GET.get('workshop_pk')
-        vedomost = Vedomost.objects.create(doc_num=random.randint(1000, 10000), creation_date=date, workshop_pk=workshop_pk)
+        vedomost = Vedomost.objects.create(doc_num=random.randint(1000, 10000), creation_date=date, workshop_pk__workshop_pk=workshop_pk)
         
         if child_amount:
             for line in UsingInstruction.objects.get(detail_manufactured_pk__detail_name='Велосипед детский').usingline_set.all():
