@@ -84,7 +84,7 @@ class ProgramLine(models.Model):
     detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk')
 
     def __str__(self):
-        return f'{self.production_program_pk.id} - {self.detail_pk.detail_name} #{self.amount}'
+        return f'{self.production_program_pk.production_program_pk} - {self.detail_pk.detail_name} #{self.amount}'
 
     class Meta:
         db_table = 'program_line'
