@@ -1,5 +1,6 @@
 import datetime
 import math
+import random
 
 from django.db.models import QuerySet, When, Case, IntegerField
 from django.shortcuts import redirect
@@ -369,6 +370,34 @@ class Accounting(APIView):
             'accounting': details}
         )
 
+
+class CreateVedomost(APIView):
+    def get(self, request, format=None):
+        date = datetime.date.fromisoformat(request.GET.get('date'))
+        child_amount = request.GET.get('child_amount')
+        teen_amount = request.GET.get('teen_amount')
+        adult_amount = request.GET.get('adult_amount')
+        workshop_pk = request.GET.get('workshop_pk')
+        vedomost = Vedomost.objects.create(doc_num=random.randint(1000, 10000), creation_date=date, workshop_pk=workshop_pk)
+        
+        if child_amount:
+            for line in UsingInstruction.objects.get(detail_manufactured_pk__detail_name='Велосипед детский').usingline_set.all():
+                VedomostLine.objects.create(vedomost_pk=vedomost, amount=child_amount * line.amount, detail_pk=line.detail_pk)
+                
+        if teen_amount:
+            for line in UsingInstruction.objects.get(detail_manufactured_pk__detail_name='Велосипед подростковый').usingline_set.all():
+                VedomostLine.objects.create(vedomost_pk=vedomost, amount=teen_amount * line.amount, detail_pk=line.detail_pk)
+                
+        if adult_amount:
+            for line in UsingInstruction.objects.get(detail_manufactured_pk__detail_name='Велосипед взрослый').usingline_set.all():
+                VedomostLine.objects.create(vedomost_pk=vedomost, amount=adult_amount * line.amount, detail_pk=line.detail_pk)
+
+        return Response({'status': 'success'})
+                
+        
+                
+            
+            
 
 
 
