@@ -21,4 +21,6 @@ urlpatterns = [
 
     path('leftovers/', views.Leftovers.as_view(), name='leftovers'),
     path('accounting/', views.Accounting.as_view(), name='accounting'),
+    path('auto-vedomosts/', views.CreateVedomost.as_view(), name='auto-vedomosts'),
+
 ]
