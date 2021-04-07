@@ -49,6 +49,9 @@ class ProductionProgramByMonth(models.Model):
     creation_date = models.DateField()
     workshop_pk = models.ForeignKey('Workshop', models.DO_NOTHING, db_column='workshop_pk')
 
+    def __str__(self):
+        return f'{self.creation_date} - {self.workshop_pk.workshop_name}'
+
     class Meta:
         db_table = 'production_program_by_month'
         unique_together = (('production_program_pk', 'workshop_pk'),)
@@ -79,6 +82,9 @@ class ProgramLine(models.Model):
     amount = models.IntegerField()
     production_program_pk = models.ForeignKey(ProductionProgramByMonth, models.DO_NOTHING, db_column='production_program_pk')
     detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk')
+
+    def __str__(self):
+        return f'{self.production_program_pk.id} - {self.detail_pk.detail_name} #{self.amount}'
 
     class Meta:
         db_table = 'program_line'
@@ -117,6 +123,9 @@ class UsingInstruction(models.Model):
     using_pk = models.AutoField(primary_key=True)
     detail_manufactured_pk = models.OneToOneField(Detail, models.DO_NOTHING, db_column='detail_manufactured_pk')
 
+    def __str__(self):
+        return self.detail_manufactured_pk.detail_name
+
     class Meta:
         db_table = 'using_instruction'
 
@@ -126,6 +135,9 @@ class UsingLine(models.Model):
     amount = models.IntegerField()
     detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk', blank=True, null=True)
     using_pk = models.ForeignKey(UsingInstruction, models.DO_NOTHING, db_column='using_pk', blank=True, null=True)
+
+    def __str__(self):
+        return f'{self.using_pk.detail_manufactured_pk.detail_name} <- {self.detail_pk.detail_name}'
 
     class Meta:
         db_table = 'using_line'
