@@ -36,6 +36,16 @@ class ReportSerializer(serializers.ModelSerializer):
     report_lines = ReportLineSerializer(read_only=True, many=True, allow_null=True, source='reportline_set', required=False)
     url = serializers.HyperlinkedIdentityField(view_name='api:report-detail')
 
+    def create(self, validated_data):
+        report = Report.objects.create(**validated_data)
+        lines = self.initial_data.get('report_lines', [])
+        for line in lines:
+            line['report_pk'] = report.report_pk
+            serialized_line = ReportLineSerializer(data=line)
+            if serialized_line.is_valid():
+                serialized_line.save()
+        return report
+
     def update(self, instance: Report, validated_data):
         instance.doc_num = validated_data.get('doc_num', instance.doc_num)
         instance.date = validated_data.get('date', instance.date)
@@ -111,6 +121,16 @@ class VedomostLineSerializer(serializers.ModelSerializer):
 class VedomostSerializer(serializers.ModelSerializer):
     vedomost_lines = VedomostLineSerializer(read_only=True, many=True, allow_null=True, source='vedomostline_set', required=False)
     url = serializers.HyperlinkedIdentityField(view_name='api:vedomost-detail')
+
+    def create(self, validated_data):
+        vedomost = Vedomost.objects.create(**validated_data)
+        lines = self.initial_data.get('vedomost_lines', [])
+        for line in lines:
+            line['vedomost_pk'] = vedomost.vedomost_pk
+            serialized_line = VedomostLineSerializer(data=line)
+            if serialized_line.is_valid():
+                serialized_line.save()
+        return vedomost
 
     def update(self, instance: Vedomost, validated_data):
         instance.doc_num = validated_data.get('doc_num', instance.doc_num)
