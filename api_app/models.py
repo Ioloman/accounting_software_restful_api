@@ -80,8 +80,8 @@ class ProductionProgramForTheQuarterByMonthLine(models.Model):
 class ProgramLine(models.Model):
     program_line_pk = models.AutoField(primary_key=True)
     amount = models.IntegerField()
-    production_program_pk = models.ForeignKey(ProductionProgramByMonth, models.DO_NOTHING, db_column='production_program_pk')
-    detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk')
+    production_program_pk = models.ForeignKey(ProductionProgramByMonth, models.CASCADE, db_column='production_program_pk')
+    detail_pk = models.ForeignKey(Detail, models.CASCADE, db_column='detail_pk')
 
     def __str__(self):
         return f'{self.production_program_pk.production_program_pk} - {self.detail_pk.detail_name} #{self.amount}'
@@ -108,7 +108,7 @@ class Report(models.Model):
 class ReportLine(models.Model):
     report_line_pk = models.AutoField(primary_key=True)
     report_pk = models.ForeignKey(Report, models.CASCADE, db_column='report_pk', blank=True, null=True)
-    detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk', blank=True, null=True)
+    detail_pk = models.ForeignKey(Detail, models.CASCADE, db_column='detail_pk', blank=True, null=True)
     workshop_receiver_pk = models.ForeignKey('Workshop', models.DO_NOTHING, db_column='workshop_receiver_pk', blank=True, null=True)
     produced = models.IntegerField(default=0)
 
@@ -121,7 +121,7 @@ class ReportLine(models.Model):
 
 class UsingInstruction(models.Model):
     using_pk = models.AutoField(primary_key=True)
-    detail_manufactured_pk = models.OneToOneField(Detail, models.DO_NOTHING, db_column='detail_manufactured_pk')
+    detail_manufactured_pk = models.OneToOneField(Detail, models.CASCADE, db_column='detail_manufactured_pk')
 
     def __str__(self):
         return self.detail_manufactured_pk.detail_name
@@ -133,8 +133,8 @@ class UsingInstruction(models.Model):
 class UsingLine(models.Model):
     using_line_pk = models.AutoField(primary_key=True)
     amount = models.IntegerField()
-    detail_pk = models.ForeignKey(Detail, models.DO_NOTHING, db_column='detail_pk', blank=True, null=True)
-    using_pk = models.ForeignKey(UsingInstruction, models.DO_NOTHING, db_column='using_pk', blank=True, null=True)
+    detail_pk = models.ForeignKey(Detail, models.CASCADE, db_column='detail_pk', blank=True, null=True)
+    using_pk = models.ForeignKey(UsingInstruction, models.CASCADE, db_column='using_pk', blank=True, null=True)
 
     def __str__(self):
         return f'{self.using_pk.detail_manufactured_pk.detail_name} <- {self.detail_pk.detail_name}'

@@ -1,11 +1,12 @@
 import datetime
 import math
 import random
+import string
 
 from django.db.models import QuerySet, When, Case, IntegerField
 from django.shortcuts import redirect
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters
+from rest_framework import filters, permissions
 from rest_framework import generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -393,6 +394,99 @@ class CreateVedomost(APIView):
                 VedomostLine.objects.create(vedomost_pk=vedomost, amount=adult_amount * line.amount, detail_pk=line.detail_pk)
 
         return Response({'status': 'success'})
+
+
+class BigDataFill(APIView):
+    """
+    Шаблоны:
+    Детали - ?type=details&amount=1000&name_length=9
+    Доки - ?type=reports&start_date=2021-02-01&end_date=2021-04-20&interval=2&workshop_pk=2
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, format=None):
+        type_ = request.GET.get('type', 'reports')
+        if type_ == 'reports' or type_ == 'vedomosts':
+            start_date = datetime.date.fromisoformat(request.GET.get('start_date'))
+            end_date = datetime.date.fromisoformat(request.GET.get('end_date'))
+            interval = int(request.GET.get('interval', 1))
+            workshop_pk = int(request.GET.get('workshop_pk'))
+            lines_from = int(request.GET.get('lines_from', 5))
+            lines_to = int(request.GET.get('lines_to', 5))
+            if type_ == 'reports':
+                objects = []
+                for num, date in enumerate((start_date + datetime.timedelta(i) for i in range(0, (end_date - start_date).days + 1, interval))):
+                    objects.append(Report(doc_num=num + 1, date=date, workshop_sender_pk_id=workshop_pk))
+                    if len(objects) > 50:
+                        Report.objects.bulk_create(objects)
+                        objects.clear()
+                else:
+                    Report.objects.bulk_create(objects)
+                    objects.clear()
+
+                detail = Detail.objects.all()[0]
+                for report in Report.objects.all():
+                    objects.extend([
+                        ReportLine(report_pk=report, detail_pk=detail, workshop_receiver_pk_id=workshop_pk, produced=5)
+                        for _ in range(random.randint(lines_from, lines_to))
+                    ])
+                    if len(objects) > 50:
+                        ReportLine.objects.bulk_create(objects)
+                        objects.clear()
+                else:
+                    ReportLine.objects.bulk_create(objects)
+                    objects.clear()
+            elif type_ == 'vedomosts':
+                objects = []
+                for num, date in enumerate((start_date + datetime.timedelta(i) for i in range(0, (end_date - start_date).days + 1, interval))):
+                    objects.append(Vedomost(doc_num=num + 1, creation_date=date, workshop_pk_id=workshop_pk))
+                    if len(objects) > 50:
+                        Vedomost.objects.bulk_create(objects)
+                        objects.clear()
+                else:
+                    Vedomost.objects.bulk_create(objects)
+                    objects.clear()
+
+                detail = Detail.objects.all()[0]
+                for vedomost in Vedomost.objects.all():
+                    objects.extend([
+                        VedomostLine(vedomost_pk=vedomost, detail_pk=detail, amount=5)
+                        for _ in range(random.randint(lines_from, lines_to))
+                    ])
+                    if len(objects) > 50:
+                        VedomostLine.objects.bulk_create(objects)
+                        objects.clear()
+                else:
+                    VedomostLine.objects.bulk_create(objects)
+                    objects.clear()
+        elif type_ == 'details':
+            amount = int(request.GET.get('amount', 100))
+            name_length = int(request.GET.get('name_length', 10))
+            details = []
+            for i in range(amount):
+                details.append(Detail(
+                    detail_name=''.join(random.choices(string.ascii_letters, k=name_length)),
+                    cipher_detail=''.join(random.choices(string.digits, k=name_length))
+                ))
+                if len(details) > 50:
+                    Detail.objects.bulk_create(details)
+                    details.clear()
+            else:
+                Detail.objects.bulk_create(details)
+                details.clear()
+        elif type_ == 'clear_all':
+            Report.objects.all().delete()
+            Vedomost.objects.all().delete()
+            Detail.objects.all().delete()
+        elif type_ == 'clear_details':
+            Detail.objects.all().delete()
+        elif type_ == 'clear_reports':
+            Report.objects.all().delete()
+        elif type_ == 'clear_vedomosts':
+            Vedomost.objects.all().delete()
+        return Response({'status': 'success'})
+
                 
         
                 
