@@ -297,6 +297,7 @@ class Leftovers(APIView):
                     detail2['detail_pk'] += detail1['detail_pk']
                     detail1['detail_pk'] = 0
         details = list(filter(lambda detail: detail['detail_pk'], details))
+        outcome_details = list(filter(lambda detail: detail['detail_pk'], outcome_details))
         for detail in details:
             detail['amount'] = 0 if detail['amount'] < 0 else detail['amount']
         return Response({
