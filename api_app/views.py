@@ -291,6 +291,8 @@ class Leftovers(APIView):
             else:
                 outcome_details = new_outcome_details
         details = list(details.values())
+        for detail in details:
+            detail['amount'] = 0 if detail['amount'] < 0 else detail['amount']
         return Response({
             'leftovers': details,
             'stuck': outcome_details,
