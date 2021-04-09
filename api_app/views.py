@@ -294,13 +294,13 @@ class Leftovers(APIView):
         for detail1 in details:
             for detail2 in details:
                 if detail1['detail_pk'] == detail2['detail_pk']:
-                    detail2['detail_pk'] += detail1['detail_pk']
-                    detail1['detail_pk'] -= detail1['detail_pk']
+                    detail2['amount'] += detail1['amount']
+                    detail1['amount'] -= detail1['amount']
         for detail1 in outcome_details:
             for detail2 in outcome_details:
                 if detail1['detail_pk'] == detail2['detail_pk']:
-                    detail2['detail_pk'] += detail1['detail_pk']
-                    detail1['detail_pk'] -= detail1['detail_pk']
+                    detail2['amount'] += detail1['amount']
+                    detail1['amount'] -= detail1['amount']
         details = list(filter(lambda detail: detail['detail_pk'], details))
         outcome_details = list(filter(lambda detail: detail['detail_pk'], outcome_details))
         for detail in details:
