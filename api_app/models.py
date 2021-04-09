@@ -137,7 +137,7 @@ class UsingLine(models.Model):
     using_pk = models.ForeignKey(UsingInstruction, models.CASCADE, db_column='using_pk', blank=True, null=True)
 
     def __str__(self):
-        return f'{self.using_pk.detail_manufactured_pk.detail_name} <- {self.detail_pk.detail_name}'
+        return f'{self.using_pk.detail_manufactured_pk.detail_name} <- {self.detail_pk.detail_name} #{self.amount}'
 
     class Meta:
         db_table = 'using_line'
