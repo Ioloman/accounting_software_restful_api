@@ -291,6 +291,12 @@ class Leftovers(APIView):
             else:
                 outcome_details = new_outcome_details
         details = list(details.values())
+        for detail1 in details:
+            for detail2 in details:
+                if detail1['detail_pk'] == detail2['detail_pk']:
+                    detail2['detail_pk'] += detail1['detail_pk']
+                    detail1['detail_pk'] = 0
+        details = list(filter(lambda detail: detail['detail_pk'], details))
         for detail in details:
             detail['amount'] = 0 if detail['amount'] < 0 else detail['amount']
         return Response({
